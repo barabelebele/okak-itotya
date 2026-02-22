@@ -9,8 +9,8 @@ from aiogram.utils import executor
 from aiogram.types import ParseMode
 
 # ========== НАСТРОЙКИ ==========
-API_TOKEN = 'YOUR_BOT_TOKEN_HERE'  # Вставьте сюда токен бота от @BotFather
-CHAT_ID = -1001234567890           # Вставьте ID вашего чата с подругой (отрицательное для группы)
+API_TOKEN = '8259801608:AAFTt3qJ3CxA2X2g6Xz7voP63yvi4Xhe81k'  # Вставьте сюда токен бота от @BotFather
+CHAT_ID = -5111459446           # Вставьте ID вашего чата с подругой (отрицательное для группы)
 INTERVAL_HOURS = 2                  # Интервал отправки (в часах)
 
 # Словарь для хранения пола пользователей (по умолчанию женский)
