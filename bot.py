@@ -43,14 +43,12 @@ print(f"✅ Загружено вопросов: {len(QUESTIONS)}")
 bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-# Принудительный сброс вебхука при запуске
+# ========== ФУНКЦИЯ СБРОСА ВЕБХУКА (будет вызвана внутри main) ==========
 async def reset_webhook():
-    await asyncio.sleep(1)
     await bot.delete_webhook(drop_pending_updates=True)
     print("✅ Вебхук сброшен")
 
-asyncio.create_task(reset_webhook())
-
+# ========== КОМАНДЫ ==========
 @dp.message(Command("start"))
 async def start_command(message: types.Message):
     await message.reply(
@@ -115,7 +113,11 @@ async def process_callback(callback: types.CallbackQuery):
     await callback.answer(text, show_alert=True)
     await callback.message.edit_reply_markup(reply_markup=None)
 
+# ========== ЗАПУСК ==========
 async def main():
+    # Сбрасываем вебхук ПЕРЕД запуском поллинга
+    await reset_webhook()
+    
     print("🤖 Бот запущен!")
     print(f"📊 Всего вопросов: {len(QUESTIONS)}")
     print("📨 Работает только по команде /ask (КД убран)")
