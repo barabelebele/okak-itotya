@@ -8,7 +8,7 @@ from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 
 # ========== НАСТРОЙКИ ==========
-API_TOKEN = '8259801608:A4FTt3qJ3Cx4A2X2g6Xz7voP63yvI4Xhe81k'  # Ваш токен
+API_TOKEN = '8259801608:AAEy-j1LevJ9qYfrItnmcCAjIyrEcg0Eycg'  # Ваш токен
 CHAT_ID = -5111459446  # ID вашего чата
 INTERVAL_HOURS = 2  # Интервал отправки (в часах)
 
