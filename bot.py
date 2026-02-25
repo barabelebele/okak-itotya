@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 # --- КОНФИГУРАЦИЯ ---
-TOKEN = "8259801608:AAEy-j1LevJ9qYfrItnmcCAjIyrEcg0Eycg"
+TOKEN = "8376965944:AAEVAn5XOKi9Cy-m_TR7Jik-z12M2uEsaPU"
 MANAGER_ID = 8527700575  
 CARD_NUMBER = "2204320900008568"
 
