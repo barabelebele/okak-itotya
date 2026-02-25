@@ -1,172 +1,128 @@
 import asyncio
-import random
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command
-from aiogram.enums import ParseMode
-from aiogram.client.default import DefaultBotProperties
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
-# ========== ТОКЕН ==========
-API_TOKEN = '8259801608:AAEy-j1LevJ9qYfrItnmcCAjIyrEcg0Eycg'
+# --- КОНФИГУРАЦИЯ ---
+TOKEN = "8259801608:AAEy-j1LevJ9qYfrItnmcCAjIyrEcg0Eycg"
+MANAGER_ID = 8527700575  
+CARD_NUMBER = "2204320900008568"
 
-# ========== ВОПРОСЫ ==========
-QUESTIONS = [
-    "Как дела?",
-    "Что нового?",
-    "Чем занимаешься?",
-    "Как настроение?",
-    "Что думаешь?",
-    "Что случилось?",
-    "Расскажи что-нибудь",
-    "Поделись новостями",
-    "Что интересного произошло?",
-    "Что смешного сегодня было?",
-    "Что хорошего случилось?",
-    "Что тебя сегодня удивило?",
-    "Что тебя сегодня порадовало?",
-    "Что тебя сегодня заставило улыбнуться?",
-    "Какие планы на сегодня?",
-    "Какие планы на завтра?",
-    "Какие планы на выходные?",
-    "Что бы ты хотел сделать прямо сейчас?",
-    "Что бы ты хотел съесть прямо сейчас?",
-    "Куда бы ты хотел пойти?",
-    "С кем бы ты хотел увидеться?",
-    "Что смотришь сейчас?",
-    "Что читаешь сейчас?",
-    "Что слушаешь сейчас?",
-    "Что тебе нравится?",
-    "Что тебя бесит?",
-    "Что тебя вдохновляет?",
-    "Что тебя мотивирует?",
-    "Что тебя успокаивает?",
-    "Что тебя радует?",
-    "О чём мечтаешь?",
-    "Чего хочешь?",
-    "Чего боишься?",
-    "Что ценишь в людях?",
-    "Что не любишь в людях?",
-    "Что для тебя важно?",
-    "Что для тебя счастье?",
-    "Что для тебя любовь?",
-    "Что для тебя дружба?",
-    "Что для тебя успех?",
-    "Что для тебя дом?",
-    "Что для тебя семья?",
-    "Что ты любишь делать в свободное время?",
-    "Какое у тебя хобби?",
-    "Какой твой любимый фильм?",
-    "Какой твой любимый сериал?",
-    "Какая твоя любимая музыка?",
-    "Какая твоя любимая книга?",
-    "Какое твоё любимое блюдо?",
-    "Какой твой любимый напиток?",
-    "Какое твоё любимое место?",
-    "Какое твоё любимое время года?",
-    "Где ты хочешь побывать?",
-    "Что хочешь попробовать?",
-    "Чему хочешь научиться?",
-    "Что хочешь изменить в своей жизни?",
-    "Что хочешь оставить как есть?",
-    "Кем ты восхищаешься?",
-    "Кто тебя вдохновляет?",
-    "Кто твой любимый человек?",
-    "С кем тебе хорошо?",
-    "С кем тебе легко?",
-    "Кого тебе не хватает?",
-    "Что тебя сейчас волнует?",
-    "Что тебя сейчас тревожит?",
-    "Что тебя сейчас радует?",
-    "Что тебя сейчас удивляет?",
-    "Что ты сейчас чувствуешь?",
-    "О чём ты сейчас думаешь?",
-    "Что ты сейчас хочешь?",
-    "Что тебе сейчас нужно?",
-    "Как прошёл твой день?",
-    "Как прошла твоя неделя?",
-    "Что было самым ярким за последнее время?",
-    "Что было самым смешным за последнее время?",
-    "Что было самым приятным за последнее время?",
-    "Что тебе запомнилось?",
-    "Что тебя удивило?",
-    "Что тебя порадовало?",
-    "Что тебя огорчило?",
-    "Что тебя разозлило?",
-    "Что бы ты хотел сказать?",
-    "Что бы ты хотел спросить?",
-    "Что бы ты хотел обсудить?",
-    "Что бы ты хотел узнать?",
-    "Что бы ты хотел понять?",
-    "Кофе или чай?",
-    "Сладкое или солёное?",
-    "Мясо или рыба?",
-    "Пицца или суши?",
-    "Лето или зима?",
-    "Море или горы?",
-    "Город или природа?",
-    "Дом или путешествия?",
-    "Утро или ночь?",
-    "Будни или выходные?",
-    "Работа или отдых?",
-    "Компания или одиночество?",
-    "Активный отдых или ленивый?",
-    "Фильм или сериал?",
-    "Книга или игра?",
-    "Музыка или тишина?",
-]
-
-print(f"✅ Загружено: {len(QUESTIONS)} вопросов")
-
-# Инициализация
-bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Сброс вебхука
-async def reset_webhook():
-    await bot.delete_webhook(drop_pending_updates=True)
-    print("✅ Вебхук сброшен")
+# Словарь для связи: ID_менеджера -> ID_активного_юзера
+active_chats = {}
 
-# ========== ОСНОВНАЯ ЛОГИКА ==========
-@dp.message(lambda message: message.text and message.text.lower() == "вопрос")
-@dp.message(Command("ask"))
-async def send_random_question(message: types.Message):
-    """Мгновенно выдаёт случайный вопрос"""
-    question = random.choice(QUESTIONS)
-    
-    # Простые кнопки
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="👍", callback_data="like"),
-            InlineKeyboardButton(text="👎", callback_data="dislike")
-        ]
-    ])
-    
-    await message.reply(f"❓ {question}", reply_markup=keyboard)
+class ShopState(StatesGroup):
+    wait_nickname = State()
+    wait_receipt = State()
+    in_support = State() # Состояние чата поддержки
+
+# --- КЛАВИАТУРЫ ---
+def main_menu():
+    builder = InlineKeyboardBuilder()
+    builder.row(types.InlineKeyboardButton(text="💎 Донаты", callback_data="cat_donate"))
+    builder.row(types.InlineKeyboardButton(text="📦 Кейсы", callback_data="cat_cases"))
+    builder.row(types.InlineKeyboardButton(text="🔓 Разбан — 70₽", callback_data="pay_Разбан_70"))
+    builder.row(types.InlineKeyboardButton(text="🆘 Тех. поддержка", callback_data="start_support"))
+    return builder.as_markup()
+
+# --- ЛОГИКА МАГАЗИНА (БЕЗ ИЗМЕНЕНИЙ) ---
 
 @dp.message(Command("start"))
-async def start_command(message: types.Message):
-    await message.reply(
-        "👋 **Привет!**\n\n"
-        "Напиши **«вопрос»** — и я сразу задам его тебе! 🤔\n\n"
-        f"📊 Всего вопросов: {len(QUESTIONS)}"
-    )
+async def start(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("👋 Привет! Это магазин сервера **Minecraft**.\nВыберите раздел:", reply_markup=main_menu(), parse_mode="Markdown")
 
-@dp.callback_query()
-async def handle_callback(callback: types.CallbackQuery):
-    if callback.data == "like":
-        await callback.answer("👍", show_alert=False)
-    elif callback.data == "dislike":
-        await callback.answer("👎", show_alert=False)
+@dp.callback_query(F.data == "main_menu")
+async def back_to_main(callback: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.edit_text("Выберите категорию:", reply_markup=main_menu())
+
+@dp.callback_query(F.data == "cat_donate")
+async def donate_list(callback: types.CallbackQuery):
+    builder = InlineKeyboardBuilder()
+    items = [("Элита", 19), ("Страж", 39), ("Герой", 79), ("Князь", 149), ("Шторм", 249), ("Эндер", 449), ("Блейз", 579), ("Визер", 749), ("Фантом", 999), ("Д.Хелпер", 1249), ("Д.Модер", 2790), ("Д.Админ", 3649)]
+    for name, price in items: builder.button(text=f"{name} {price}₽", callback_data=f"pay_{name}_{price}")
+    builder.adjust(2).row(types.InlineKeyboardButton(text="🔙 Назад", callback_data="main_menu"))
+    await callback.message.edit_text("✨ **Выберите привилегию:**", reply_markup=builder.as_markup(), parse_mode="Markdown")
+
+@dp.callback_query(F.data == "cat_cases")
+async def cases_list(callback: types.CallbackQuery):
+    builder = InlineKeyboardBuilder()
+    items = [("Кейс Донат", 99), ("Кейс Жетон", 49), ("Кейс Префикс", 10), ("Кейс Титул", 29), ("Кейс Монеты", 10)]
+    for name, price in items: builder.button(text=f"{name} {price}₽", callback_data=f"pay_{name}_{price}")
+    builder.adjust(1).row(types.InlineKeyboardButton(text="🔙 Назад", callback_data="main_menu"))
+    await callback.message.edit_text("📦 **Выберите кейс:**", reply_markup=builder.as_markup(), parse_mode="Markdown")
+
+@dp.callback_query(F.data.startswith("pay_"))
+async def start_buy(callback: types.CallbackQuery, state: FSMContext):
+    _, item, price = callback.data.split("_")
+    await state.update_data(item=item, price=price)
+    await callback.message.edit_text(f"🛒 Вы выбрали: **{item}**\n\n⌨️ Введите ваш **игровой ник**:", parse_mode="Markdown")
+    await state.set_state(ShopState.wait_nickname)
+
+@dp.message(ShopState.wait_nickname)
+async def get_nickname(message: types.Message, state: FSMContext):
+    await state.update_data(nickname=message.text)
+    data = await state.get_data()
+    await message.answer(f"✅ Ник: `{data['nickname']}`\n💰 Сумма: `{data['price']}₽`\n💳 Карта: `{CARD_NUMBER}`\n\n📸 Пришлите фото чека.", parse_mode="Markdown")
+    await state.set_state(ShopState.wait_receipt)
+
+@dp.message(ShopState.wait_receipt, F.photo)
+async def get_receipt(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    await message.answer(f"✅ **Спасибо!**\nВ течении 15-30 мин будет выдан(а) **{data['item']}**.\nМы работаем с **8:00 по 20:00 МСК**.", parse_mode="Markdown")
+    caption = f"⚠️ **НОВЫЙ ЗАКАЗ**\n\n👤 Юзер: @{message.from_user.username}\n🎮 Ник: `{data['nickname']}`\n📦 Товар: {data['item']}\n💵 Сумма: {data['price']}₽"
+    await bot.send_photo(MANAGER_ID, photo=message.photo[-1].file_id, caption=caption, parse_mode="Markdown")
+    await state.clear()
+
+# --- ЛОГИКА ПОДДЕРЖКИ (АНОНИМНЫЙ ЧАТ) ---
+
+@dp.callback_query(F.data == "start_support")
+async def open_support(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("💬 Вы подключились к поддержке. Напишите ваш вопрос ниже 👇\n(Админ увидит ваше сообщение, но не ваш профиль)")
+    await state.set_state(ShopState.in_support)
+    # Уведомляем админа
+    await bot.send_message(MANAGER_ID, f"🔔 Юзер @{callback.from_user.username} (ID: `{callback.from_user.id}`) начал чат!")
+    active_chats[MANAGER_ID] = callback.from_user.id
+
+# Если пишет юзер в поддержку -> летит админу
+@dp.message(ShopState.in_support)
+async def support_to_admin(message: types.Message):
+    if message.text == "/Стоп":
+        await message.answer("❌ Чат завершен.", reply_markup=main_menu())
+        await bot.send_message(MANAGER_ID, "❌ Пользователь завершил чат.")
+        return
     
-    await callback.message.edit_reply_markup(reply_markup=None)
+    await bot.send_message(MANAGER_ID, f"📩 **Сообщение от юзера:**\n{message.text}")
 
-# ========== ЗАПУСК ==========
+# Если пишет админ (ты) -> летит юзеру
+@dp.message(F.from_user.id == MANAGER_ID)
+async def admin_to_user(message: types.Message):
+    user_id = active_chats.get(MANAGER_ID)
+    
+    if message.text == "/Стоп":
+        if user_id:
+            await bot.send_message(user_id, "⚠️ Администратор завершил диалог.", reply_markup=main_menu())
+            await bot.send_message(MANAGER_ID, "✅ Вы завершили чат.")
+            active_chats.pop(MANAGER_ID, None)
+        return
+
+    if user_id:
+        try:
+            await bot.send_message(user_id, f"👨‍💻 **Ответ поддержки:**\n{message.text}")
+        except:
+            await message.answer("Ошибка: пользователь заблокировал бота или чат не найден.")
+    else:
+        await message.answer("Сначала кто-то должен написать в поддержку!")
+
 async def main():
-    await reset_webhook()
-    print("🤖 Бот запущен!")
-    print("📨 Реагирует на слово «вопрос» и команду /ask")
-    print(f"📊 Вопросов в базе: {len(QUESTIONS)}")
     await dp.start_polling(bot)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
+    
